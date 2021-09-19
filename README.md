@@ -1,4 +1,4 @@
-# AGS-Restarter
+# AGS Restarter (by Ope Ltd)
 
 ![image](https://user-images.githubusercontent.com/26259049/133941746-945f73a3-6777-4195-b703-2008b99a85e6.png)
 
