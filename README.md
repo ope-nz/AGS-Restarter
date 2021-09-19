@@ -19,3 +19,5 @@ Services can be stopped, started or restarted using the individual buttons.
 There are also buttons at the top of the services list to allow bulk actions (i.e to all services within a folder).
 
 The restart action is a little bit "janky" as it does a syncronous REST request to stop the service before doing an asyncronous call to start the service. This is to stop the server being overloaded with too many start operations at once.
+
+The stop/start all actions are asyncronous and use an iterator to perform the action one at a time.
