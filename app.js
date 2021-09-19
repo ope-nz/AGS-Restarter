@@ -8,6 +8,7 @@ var services = [];
 
 var current_folder = "";
 var iterator = -1;
+var busy = false;
 
 // Get a token using credentials
 function getToken()
@@ -74,19 +75,20 @@ function showMainSection()
     document.getElementById("main").className = "section";
 }
 
-// Populat ethe main section
+// Populate the main section
 function populateMainSection()
 { 
     var folders = ["/"].concat(getAGSFolders());
 
-    var el = document.getElementById("folders")
+    var el = document.getElementById("folders");
 
     folders.forEach(function (item, index)
     {
         console.log(item, index);
         let li = document.createElement("li");
         li.innerHTML = `<a href="javascript:showServices('${item}')">${item}</a>`;
-        li.setAttribute("class","menu-item");            
+        li.setAttribute("class","menu-item");
+        li.id = item;         
         el.appendChild(li);
     })
 }
@@ -141,9 +143,25 @@ function getAGSServices(folder)
     }
 }
 
+// Select none
+function resetSelected()
+{
+    var menus = document.getElementsByClassName("menu-item");
+    
+    for (let i = 0; i < menus.length; i++) {
+        menus[i].classList.remove("selected");
+    }
+}
+
 // Display the services list
 function showServices(folder)
 {
+    if (busy == true) return;
+
+    resetSelected();
+    var li = document.getElementById(folder)
+    li.classList.add(`selected`);
+
     current_folder = folder;
 
     getAGSServices(folder)
@@ -229,13 +247,33 @@ function createButtonGroupAll()
     return li
 }
 
+// Show the busy spinner
+function showBusy()
+{
+    busy = true; 
+    var el = document.getElementById("status");
+    el.innerHTML = `<button class="animated loading loading-left outline btn-transparent w-100">Busy</button>`;
+}
+
+// Hide the busy spinner
+function hideBusy()
+{
+    var el = document.getElementById("status");
+    el.innerHTML = ``;
+    busy = false; 
+}
+
 // Restart All services
 function restartServices()
-{    
+{  
+    showBusy();
+
     services.forEach(function (item, index)
     {        
         if (stopServiceSync(item) == true) toggleService(item,"start");
     })
+
+    hideBusy();
 }
 
 // Restart a single service
@@ -247,6 +285,7 @@ function restartService(serviceName)
 // Stop all services
 function stopServices()
 { 
+    showBusy()
     iterator=0;
     toggleNextService("stop");
 }
@@ -254,6 +293,7 @@ function stopServices()
 // Start all services
 function startServices()
 {
+    showBusy();
     iterator=0;
     toggleNextService("start");
 }
@@ -261,7 +301,7 @@ function startServices()
 // Toggle next service in itertaor (stop or start action)
 function toggleNextService(action)
 {
-    if (iterator == services.length-1){iterator = -1;return;}
+    if (iterator == services.length-1){iterator = -1;hideBusy();return;}
     toggleService(services[++iterator],action);
 }
 
