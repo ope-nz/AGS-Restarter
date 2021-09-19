@@ -9,6 +9,7 @@ var services = [];
 var current_folder = "";
 var iterator = -1;
 
+// Get a token using credentials
 function getToken()
 {
     var user = document.getElementById("agsuser").value;
@@ -42,6 +43,7 @@ function getToken()
     xmlHttp.send(query_string);
 }
 
+// Work out the token URL (this is syncronous)
 function getTokenURL(url)
 {
     url = `${url}/rest/info?f=json`;
@@ -62,6 +64,7 @@ function getTokenURL(url)
     return "";
 }
 
+// Show the main UI after login
 function showMainSection()
 {
     document.getElementById("login").className = "section u-none";
@@ -71,6 +74,7 @@ function showMainSection()
     document.getElementById("main").className = "section";
 }
 
+// Populat ethe main section
 function populateMainSection()
 { 
     var folders = ["/"].concat(getAGSFolders());
@@ -87,6 +91,7 @@ function populateMainSection()
     })
 }
 
+// Get the ArcGIS service folders
 function getAGSFolders()
 {
     var url = `${agsurl}/admin/services`
@@ -109,6 +114,7 @@ function getAGSFolders()
     return [];
 }
 
+// Get the services within a folder
 function getAGSServices(folder)
 {
     services = [];
@@ -135,6 +141,7 @@ function getAGSServices(folder)
     }
 }
 
+// Display the services list
 function showServices(folder)
 {
     current_folder = folder;
@@ -157,6 +164,7 @@ function showServices(folder)
     el.appendChild(ul);
 }
 
+// Create a button element for stop/start/restart actions
 function createButtonGroup(item)
 {
     let li = document.createElement("li");
@@ -191,6 +199,7 @@ function createButtonGroup(item)
     return li
 }
 
+// Create a button element for the "ALL" stop/start/restart actions
 function createButtonGroupAll()
 {
     let li = document.createElement("li");
@@ -220,39 +229,43 @@ function createButtonGroupAll()
     return li
 }
 
+// Restart All services
 function restartServices()
 {    
     services.forEach(function (item, index)
     {        
-        //stopService(item);
-        //startService(item);
         if (stopServiceSync(item) == true) toggleService(item,"start");
     })
 }
 
+// Restart a single service
 function restartService(serviceName)
 {    
     if (stopServiceSync(serviceName) == true) toggleService(serviceName,"start");
 }
 
+// Stop all services
 function stopServices()
 { 
     iterator=0;
     toggleNextService("stop");
 }
 
+// Start all services
 function startServices()
 {
     iterator=0;
     toggleNextService("start");
 }
 
+// Toggle next service in itertaor (stop or start action)
 function toggleNextService(action)
 {
     if (iterator == services.length-1){iterator = -1;return;}
     toggleService(services[++iterator],action);
 }
 
+// Toggle given service (stop or start action)
 function toggleService(serviceName,action)
 {
     var a1 = "";
@@ -298,7 +311,7 @@ function toggleService(serviceName,action)
     xmlHttp.send(query_string);
 }
 
-// This function is syncronous :(
+// Stop a service, this function is syncronous :(
 function stopServiceSync(serviceName)
 {
     console.log(`STOPPING ${current_folder} ${serviceName}`);
