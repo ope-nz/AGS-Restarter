@@ -7,7 +7,6 @@ var folders = [];
 var services = [];
 
 var current_folder = "";
-var iterator = -1;
 var busy = false;
 
 // Get a token using credentials
@@ -182,6 +181,12 @@ function showServices(folder)
     el.appendChild(ul);
 }
 
+// Open the service REST endpoint in a new tab
+function openService(serviceName)
+{
+    window.open(`${agsurl}/rest/services/${current_folder}/${serviceName.replace(".","/")}`, '_blank').focus();
+}
+
 // Create a button element for stop/start/restart actions
 function createButtonGroup(item)
 {
@@ -210,6 +215,7 @@ function createButtonGroup(item)
 
     var btn = document.createElement("button");
     btn.setAttribute("class","outline btn-transparent btn-small");
+    btn.setAttribute("onclick",`openService('${item}')`);
     btn.innerText = item;
     d.appendChild(btn);
 
@@ -264,124 +270,90 @@ function hideBusy()
 }
 
 // Restart All services
-function restartServices()
+async function restartServices()
 {  
     showBusy();
 
-    services.forEach(function (item, index)
-    {        
-        if (stopServiceSync(item) == true) toggleService(item,"start");
-    })
+    for (let i = 0; i < services.length; i++) {
+        await toggleService(services[i],"stop");
+        await toggleService(services[i],"start");
+    }
 
     hideBusy();
 }
 
 // Restart a single service
-function restartService(serviceName)
+async function restartService(serviceName)
 {    
-    if (stopServiceSync(serviceName) == true) toggleService(serviceName,"start");
+    await toggleService(serviceName,"stop");
+    await toggleService(serviceName,"start");
 }
 
 // Stop all services
-function stopServices()
+async function stopServices()
 { 
-    showBusy()
-    iterator=0;
-    toggleNextService("stop");
+    showBusy();
+    for (let i = 0; i < services.length; i++) {
+        await toggleService(services[i],"stop");
+    }
+    hideBusy();
 }
 
 // Start all services
-function startServices()
+async function startServices()
 {
     showBusy();
-    iterator=0;
-    toggleNextService("start");
-}
-
-// Toggle next service in itertaor (stop or start action)
-function toggleNextService(action)
-{
-    if (iterator == services.length-1){iterator = -1;hideBusy();return;}
-    toggleService(services[++iterator],action);
-}
-
-// Toggle given service (stop or start action)
-function toggleService(serviceName,action)
-{
-    var a1 = "";
-    var a2 = "";
-
-    if (action == "stop"){a1="STOPPING";a2="STOPPED"}
-    if (action == "start"){a1="STARTING";a2="STARTED"}
-
-    alertify.warning(`${a1}<br>${serviceName}`);
-    console.log(`${a1} ${current_folder} ${serviceName}`);
-    
-    var url = `${agsurl}/admin/services`
-    if (current_folder != "/") url += `/${current_folder}`;
-    url += `/${serviceName}/${action}`;
-
-    var params = {"token": token, "f": "json"};
-    var query_string = Object.keys(params).map((key) => {return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]) }).join('&');
-
-    var xmlHttp = new XMLHttpRequest();  
-
-    xmlHttp.onreadystatechange = function ()
-    {
-        if (this.readyState == 4 && this.status == 200)
-        {
-            var response = JSON.parse(xmlHttp.responseText);
-
-            if (response.hasOwnProperty("status"))
-            {
-                if (response.status == "success")
-                {
-                    console.log(`${a2} ${current_folder} ${serviceName}`);
-                    alertify.success(`${a2}<br>${serviceName}`);
-                    if (iterator >= 0) toggleNextService(action);
-                    return;
-                }
-            }
-            alertify.notify(xmlHttp.responseText, 'error', 5);
-        }
-    };
-
-    xmlHttp.open("POST", url, true);
-    xmlHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xmlHttp.send(query_string);
-}
-
-// Stop a service, this function is syncronous :(
-function stopServiceSync(serviceName)
-{
-    console.log(`STOPPING ${current_folder} ${serviceName}`);
-    
-    var url = `${agsurl}/admin/services`
-    if (current_folder != "/") url += `/${current_folder}`;
-    url += `/${serviceName}/stop`;
-
-    var params = {"token": token, "f": "json"};
-    var query_string = Object.keys(params).map((key) => {return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]) }).join('&');
-
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("POST", url, false);
-    xmlHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xmlHttp.send(query_string);
-
-    if (xmlHttp.status == 200)
-    {
-        var response = JSON.parse(xmlHttp.responseText);
-
-        if (response.hasOwnProperty("status"))
-        {
-            if (response.status == "success")
-            {
-                console.log(`STOPPED ${current_folder} ${serviceName}`);
-                return true;
-            }
-        }
-        
+    for (let i = 0; i < services.length; i++) {
+        await toggleService(services[i],"start");
     }
+    hideBusy();
+}
 
-    return false;    
+// Promise based call to toggle service
+function toggleService(serviceName,action){
+    return new Promise(function (resolve, reject) {
+
+        var a1 = "";
+        var a2 = "";
+
+        if (action == "stop"){a1="STOPPING";a2="STOPPED"}
+        if (action == "start"){a1="STARTING";a2="STARTED"}
+
+        alertify.warning(`${a1}<br>${serviceName}`);
+        console.log(`${a1} ${current_folder} ${serviceName}`);
+        
+        var url = `${agsurl}/admin/services`
+        if (current_folder != "/") url += `/${current_folder}`;
+        url += `/${serviceName}/${action}`;
+
+        var params = {"token": token, "f": "json"};
+        var query_string = Object.keys(params).map((key) => {return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]) }).join('&');
+
+        var xmlHttp = new XMLHttpRequest();  
+
+        xmlHttp.onreadystatechange = function ()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var response = JSON.parse(xmlHttp.responseText);
+
+                if (response.hasOwnProperty("status"))
+                {
+                    if (response.status == "success")
+                    {
+                        console.log(`${a2} ${current_folder} ${serviceName}`);
+                        alertify.success(`${a2}<br>${serviceName}`);
+                        resolve();
+                        return;
+                    }
+                }
+                alertify.notify(xmlHttp.responseText, 'error', 5);
+                reject();
+            }
+        };
+
+        xmlHttp.open("POST", url, true);
+        xmlHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        xmlHttp.send(query_string);
+    });
 }
