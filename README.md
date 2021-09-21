@@ -18,4 +18,4 @@ Services can be stopped, started or restarted using the individual buttons.
 
 There are also buttons at the top of the services list to allow bulk actions (i.e to stop/start/restart all services within a folder).
 
-All actions are asyncronous but are called one at a time to not overload the server.
+All actions are asynchronous but are called one at a time to not overload the server.
