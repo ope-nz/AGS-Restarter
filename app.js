@@ -254,11 +254,11 @@ function createButtonGroupAll()
 }
 
 // Show the busy spinner
-function showBusy()
+function showBusy(index,total)
 {
     busy = true; 
     var el = document.getElementById("status");
-    el.innerHTML = `<button class="animated loading loading-left outline btn-transparent w-100">Busy</button>`;
+    el.innerHTML = `<button class="animated loading loading-left outline btn-transparent w-100">Busy (${index+1} of ${total})</button>`;
 }
 
 // Hide the busy spinner
@@ -272,9 +272,8 @@ function hideBusy()
 // Restart All services
 async function restartServices()
 {  
-    showBusy();
-
     for (let i = 0; i < services.length; i++) {
+        showBusy(i,services.length);
         await toggleService(services[i],"stop");
         await toggleService(services[i],"start");
     }
@@ -292,8 +291,8 @@ async function restartService(serviceName)
 // Stop all services
 async function stopServices()
 { 
-    showBusy();
     for (let i = 0; i < services.length; i++) {
+        showBusy(i,services.length);
         await toggleService(services[i],"stop");
     }
     hideBusy();
@@ -302,8 +301,8 @@ async function stopServices()
 // Start all services
 async function startServices()
 {
-    showBusy();
     for (let i = 0; i < services.length; i++) {
+        showBusy(i,services.length);
         await toggleService(services[i],"start");
     }
     hideBusy();
